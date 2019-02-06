@@ -54,6 +54,27 @@ def train_GNB_classifier(X_train, Y_train):
 	return parameters
 
 def predict_GNB_classifier(X_test, parameters):
+	
+	predictions=[]
+
+	#We will calculate likelihood and posteriors in this section
+	#Here we assume that all the features xi are independent
+
+	likelihood_x_y_1= (np.exp(-np.square(X_test-parameters['u_1'])/(2*parameters['var_1'])))/(np.sqrt(2*3.14*parameters['var_1']))
+	likelihood_x_y_0= (np.exp(-np.square(X_test-parameters['u_0'])/(2*parameters['var_0'])))/(np.sqrt(2*3.14*parameters['var_0']))
+
+	# print(likelihood_x_y_0.shape)
+	#Now because of conditional independence
+	likelihood_x1_x2_x3_x4_y_1= likelihood_x_y_1[:,0]*likelihood_x_y_1[:,1]*likelihood_x_y_1[:,2]*likelihood_x_y_1[:,3]
+	likelihood_x1_x2_x3_x4_y_0= likelihood_x_y_0[:,0]*likelihood_x_y_0[:,1]*likelihood_x_y_0[:,2]*likelihood_x_y_0[:,3]
+
+	Posterior_Y_X_1= likelihood_x1_x2_x3_x4_y_1*parameters['Prior_y_1']
+	Posterior_Y_X_0= likelihood_x1_x2_x3_x4_y_0*parameters['Prior_y_0']
+
+	predictions[Posterior_Y_X_1 >= Posterior_Y_X_0]=1
+	predictions[Posterior_Y_X_1 < Posterior_Y_X_0]=0
+
+	print(predictions)
 	return []
 
 def calc_accuracy(predictions, Y_test):
