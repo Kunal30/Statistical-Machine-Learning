@@ -3,6 +3,8 @@ import numpy as np
 import random
 from random import shuffle
 import math
+import collections
+
 def main():
 	
 	#Extracting features and Labels from the file
@@ -32,7 +34,24 @@ def main():
 	print(hash_map_accuracies)	
 
 def train_GNB_classifier(X_train, Y_train):
-	return []
+
+	#calculating priors and parameters(u and sigma_sqr)
+	parameters={}
+
+	number_of_diffnums= collections.Counter(Y_train)
+
+	parameters['Prior_y_1']= number_of_diffnums[1]*1.00/len(Y_train)
+	parameters['Prior_y_0']= number_of_diffnums[0]*1.00/len(Y_train)
+
+	ones= X_train[Y_train[:]==1.00]
+	zeros= X_train[Y_train[:]==0.00]
+	
+	parameters['u_1']=np.mean(ones,axis=0)
+	parameters['u_0']=np.mean(zeros,axis=0)
+	parameters['var_1']=np.var(ones,axis=0)
+	parameters['var_0']=np.var(zeros,axis=0)
+
+	return parameters
 
 def predict_GNB_classifier(X_test, parameters):
 	return []
