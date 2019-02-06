@@ -1,14 +1,79 @@
 import pandas as pd
 import numpy as np
-
-
+import random
+from random import shuffle
+import math
 def main():
 	
-	X,Y= extract_data('data_banknote_authentication.txt') #Extracting features and Labels from the file
+	#Extracting features and Labels from the file
+	X,Y= extract_data('data_banknote_authentication.txt') 
+	
+	#Now performing 3 fold cross validation on the dataset
+    #to get the get the data for the 6 fractions over 5 runs
+	
+	train_test_data= three_fold_cross_validation(X,Y,[0.01,0.02,0.05,0.1,0.625,1]) 
+	
+	#Now we can train the Gaussian Naive Bayes classifier
+	#for all training set sizes
+	 
 	
 
+def three_fold_cross_validation(X,Y,fractions):
 
-def three_fold_cross_validation(X,Y):
+	train_test_data=[]
+	
+	# 1372 is not divisible by 3
+	# therefore 3 fold cannot be applied directly
+	X=X[:-(len(Y)%3)]
+	Y=Y[:-(len(Y)%3)]
+	# X=X.tolist()
+	# Y=Y.tolist()
+	
+
+	for fraction in fractions:		
+		#randomization starts here
+		state = np.random.get_state()
+		X=np.take(X,np.random.permutation(X.shape[0]),axis=0,out=X)
+		np.random.set_state(state)
+		Y=np.take(Y,np.random.permutation(Y.shape[0]),axis=0,out=Y)
+		#randomization ends here
+
+		#now splitting the data into 3 folds
+		X_temp=np.split(X,3)
+		Y_temp=np.split(Y,3)
+
+		# now generating train and test data from the folds
+		for i in range(0,3):
+			X_TEST = X_temp[i]
+			Y_TEST = Y_temp[i]
+			# a=X_temp[:i]
+			# b=X_temp[i+1:]
+			# a=np.asarray(a)
+			# b=np.asarray(b)
+			# print(a.shape)
+			# print(b.shape)
+			X_TRAIN = np.concatenate(X_temp[:i]+X_temp[i+1:],axis=0)
+			Y_TRAIN = np.concatenate(Y_temp[:i]+Y_temp[i+1:],axis=0)
+
+			#Collecting data over 5 runs
+			for i in range(1,6):
+				value=math.floor(fraction*Y_TRAIN.shape[0])
+				print(fraction)
+				# print(X_TRAIN.shape)				
+				X_TRAIN_TEMP= X_TRAIN[:int(value)]
+				Y_TRAIN_TEMP= Y_TRAIN[:int(value)]
+				
+				train_test_data.append([X_TRAIN_TEMP,Y_TRAIN_TEMP,X_TEST,Y_TEST])
+
+				#now randomizing the training data and label
+				state = np.random.get_state()
+				X_TRAIN=np.take(X_TRAIN,np.random.permutation(X_TRAIN.shape[0]),axis=0,out=X_TRAIN)
+				np.random.set_state(state)				
+				Y_TRAIN=np.take(Y_TRAIN,np.random.permutation(Y_TRAIN.shape[0]),axis=0,out=Y_TRAIN)
+
+	return np.array(train_test_data)
+
+
 
 
 def extract_data(location):
