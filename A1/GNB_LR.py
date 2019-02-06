@@ -11,12 +11,39 @@ def main():
 	#Now performing 3 fold cross validation on the dataset
     #to get the get the data for the 6 fractions over 5 runs
 	
-	train_test_data= three_fold_cross_validation(X,Y,[0.01,0.02,0.05,0.1,0.625,1]) 
+	train_test_data,frac_values_per_dataset= three_fold_cross_validation(X,Y,[0.01,0.02,0.05,0.1,0.625,1]) 
 	
 	#Now we can train the Gaussian Naive Bayes classifier
 	#for all training set sizes
-	 
+	hash_map_accuracies={.01: [], 0.02: [], 0.05: [], 0.1: [], 0.625: [], 1:[] } 
+
 	
+	for i in range(0,train_test_data.shape[0]):
+		X_train=train_test_data[i][0]
+		Y_train=train_test_data[i][1]
+		X_test=train_test_data[i][2]
+		Y_test=train_test_data[i][3]				
+		
+		parameters= train_GNB_classifier(X_train,Y_train)
+		predictions= predict_GNB_classifier(X_test,parameters)
+		accuracy= calc_accuracy(predictions,Y_test)
+		hash_map_accuracies[frac_values_per_dataset[i]].append(accuracy)
+	
+	print(hash_map_accuracies)	
+
+def train_GNB_classifier(X_train, Y_train):
+	return []
+
+def predict_GNB_classifier(X_test, parameters):
+	return []
+
+def calc_accuracy(predictions, Y_test):
+	accuracy_matrix=np.zeros(len(Y_test))
+	accuracy_matrix[predictions == Y_test]=1
+	accuracy_matrix[predictions != Y_test]=0
+
+	return (((sum(accuracy_matrix))*1.00)/len(Y_test))*100
+
 
 def three_fold_cross_validation(X,Y,fractions):
 
@@ -29,6 +56,7 @@ def three_fold_cross_validation(X,Y,fractions):
 	# X=X.tolist()
 	# Y=Y.tolist()
 	
+	frac_values_per_dataset=[]	
 
 	for fraction in fractions:		
 		#randomization starts here
@@ -58,7 +86,7 @@ def three_fold_cross_validation(X,Y,fractions):
 			#Collecting data over 5 runs
 			for i in range(1,6):
 				value=math.floor(fraction*Y_TRAIN.shape[0])
-				print(fraction)
+				frac_values_per_dataset.append(fraction)
 				# print(X_TRAIN.shape)				
 				X_TRAIN_TEMP= X_TRAIN[:int(value)]
 				Y_TRAIN_TEMP= Y_TRAIN[:int(value)]
@@ -71,7 +99,7 @@ def three_fold_cross_validation(X,Y,fractions):
 				np.random.set_state(state)				
 				Y_TRAIN=np.take(Y_TRAIN,np.random.permutation(Y_TRAIN.shape[0]),axis=0,out=Y_TRAIN)
 
-	return np.array(train_test_data)
+	return np.array(train_test_data),frac_values_per_dataset
 
 
 
