@@ -31,26 +31,73 @@ def main():
 		accuracy= calc_accuracy(predictions,Y_test)
 		hash_map_accuracies[frac_values_per_dataset[i]].append(accuracy)
 	
-	learning_curve_plot={}
+	learning_curve_plot1={}
 	
 	for i in hash_map_accuracies.items():		  
-		  learning_curve_plot[i[0]]=np.mean(i[1])
+		  learning_curve_plot1[i[0]]=np.mean(i[1])
 
+	print(learning_curve_plot1)	  
+	
 	#Now plotting the curve for accuracy vs training-set fraction
-	plot_graph(learning_curve_plot,'GNB')	  
-	
+	# plot_graph(learning_curve_plot,'GNB')	  
 
-def plot_graph(plot,title):
+	#Now switching to Logistic Regression
+
+	hash_map_accuracies={.01: [], 0.02: [], 0.05: [], 0.1: [], 0.625: [], 1:[] }
 	
-	X,Y= zip(*sorted(plot.items()))
+	for i in range(0,train_test_data.shape[0]):
+		X_train=train_test_data[i][0]
+		Y_train=train_test_data[i][1]
+		X_test=train_test_data[i][2]
+		Y_test=train_test_data[i][3]				
+		
+		W,b= train_LR_classifier(X_train,Y_train,0.01)
+		predictions= predict_LR_classifier(X_test,W,b)
+		accuracy= calc_accuracy(predictions,Y_test)
+		hash_map_accuracies[frac_values_per_dataset[i]].append(accuracy)
+	
+	learning_curve_plot2={}
+	
+	for i in hash_map_accuracies.items():		  
+		  learning_curve_plot2[i[0]]=np.mean(i[1])
+	print(learning_curve_plot2)	  
+	plot_graph(learning_curve_plot1,learning_curve_plot2,'GNB vs LR')
+
+def sigmoid(x):
+	return 1 / (1 + np.exp(-x))
+
+def plot_graph(plot1,plot2,title):
+	
+	X,Y1= zip(*sorted(plot1.items()))
+	X,Y2= zip(*sorted(plot2.items()))
 	fig= plt.figure()
 	plt.title(title)
-	plt.plot(X,Y,'r')
+	plt.plot(X,Y1,'r',label='GNB')
+	plt.plot(X,Y2,'b',label='LR')
 	plt.ylabel('Accuracy')
-	plt.xlabel('Training Data Size')		
+	plt.xlabel('Training Data Size')
+	plt.legend()		
 	plt.show()
-	fig.savefig(title+'.png')
+	
 
+def train_LR_classifier(X_train, Y_train, eta):	
+	X_train=X_train.T
+	Y_train=Y_train.T
+
+	rows,cols=X_train.shape
+
+	W=np.zeros((rows,1))
+	b=0
+	for i in range(0,100):
+		Z=np.dot(W.T,X_train)+b
+		Y_hat=sigmoid(Z)
+		loss=Y_train-Y_hat
+		db=np.sum(loss)/cols
+		dW=np.matmul(X_train,loss.T)/cols
+		W=W+eta*dW
+		b=b+eta*db
+
+	return W,b
 
 def train_GNB_classifier(X_train, Y_train):
 
@@ -72,6 +119,22 @@ def train_GNB_classifier(X_train, Y_train):
 
 	return parameters
 
+def predict_LR_classifier(X_test,W,b):
+	predictions=[]
+	X_test=X_test.T
+	Z=np.dot(W.T,X_test)+b
+	Y_hat=sigmoid(Z)
+	
+	Y_hat=Y_hat.T
+	
+	for i in range(0,X_test.shape[1]):
+		if Y_hat[i]>=0.5:
+			predictions.append(1)
+		else:
+			predictions.append(0)	
+
+	# print(predictions)		
+	return predictions
 def predict_GNB_classifier(X_test, parameters):
 	
 	predictions=[]
@@ -167,9 +230,6 @@ def three_fold_cross_validation(X,Y,fractions):
 				Y_TRAIN=np.take(Y_TRAIN,np.random.permutation(Y_TRAIN.shape[0]),axis=0,out=Y_TRAIN)
 
 	return np.array(train_test_data),frac_values_per_dataset
-
-
-
 
 def extract_data(location):
 	
