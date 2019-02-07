@@ -1,9 +1,9 @@
-import pandas as pd
 import numpy as np
 import random
 from random import shuffle
 import math
 import collections
+import matplotlib.pyplot as plt
 
 def main():
 	
@@ -31,7 +31,26 @@ def main():
 		accuracy= calc_accuracy(predictions,Y_test)
 		hash_map_accuracies[frac_values_per_dataset[i]].append(accuracy)
 	
-	print(hash_map_accuracies)	
+	learning_curve_plot={}
+	
+	for i in hash_map_accuracies.items():		  
+		  learning_curve_plot[i[0]]=np.mean(i[1])
+
+	#Now plotting the curve for accuracy vs training-set fraction
+	plot_graph(learning_curve_plot,'GNB')	  
+	
+
+def plot_graph(plot,title):
+	
+	X,Y= zip(*sorted(plot.items()))
+	fig= plt.figure()
+	plt.title(title)
+	plt.plot(X,Y,'r')
+	plt.ylabel('Accuracy')
+	plt.xlabel('Training Data Size')		
+	plt.show()
+	fig.savefig(title+'.png')
+
 
 def train_GNB_classifier(X_train, Y_train):
 
@@ -71,11 +90,19 @@ def predict_GNB_classifier(X_test, parameters):
 	Posterior_Y_X_1= likelihood_x1_x2_x3_x4_y_1*parameters['Prior_y_1']
 	Posterior_Y_X_0= likelihood_x1_x2_x3_x4_y_0*parameters['Prior_y_0']
 
-	predictions[Posterior_Y_X_1 >= Posterior_Y_X_0]=1
-	predictions[Posterior_Y_X_1 < Posterior_Y_X_0]=0
+	# print(Posterior_Y_X_0.shape)
 
-	print(predictions)
-	return []
+	for i in range(0,457):
+		if Posterior_Y_X_1[i] >= Posterior_Y_X_0[i]:
+			predictions.append(1)
+		else:
+			predictions.append(0)	
+	
+	# predictions[Posterior_Y_X_1 >= Posterior_Y_X_0]=1
+	# predictions[Posterior_Y_X_1 < Posterior_Y_X_0]=0
+	predictions=np.asarray(predictions)
+	# print(predictions)
+	return predictions
 
 def calc_accuracy(predictions, Y_test):
 	accuracy_matrix=np.zeros(len(Y_test))
