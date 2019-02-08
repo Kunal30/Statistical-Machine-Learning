@@ -14,7 +14,7 @@ def main():
     #to get the get the data for the 6 fractions over 5 runs
 	
 	train_test_data,frac_values_per_dataset= three_fold_cross_validation(X,Y,[0.01,0.02,0.05,0.1,0.625,1]) 
-	print(train_test_data)
+	
 	#Now we can train the Gaussian Naive Bayes classifier
 	#for all training set sizes
 	hash_map_accuracies={.01: [], 0.02: [], 0.05: [], 0.1: [], 0.625: [], 1:[] } 
@@ -36,7 +36,7 @@ def main():
 	for i in hash_map_accuracies.items():		  
 		  learning_curve_plot1[i[0]]=np.mean(i[1])
 
-	print(learning_curve_plot1)	  
+	# print(learning_curve_plot1)	  
 	
 	#Now plotting the curve for accuracy vs training-set fraction
 	# plot_graph(learning_curve_plot,'GNB')	  
@@ -51,7 +51,7 @@ def main():
 		X_test=train_test_data[i][2]
 		Y_test=train_test_data[i][3]				
 		
-		W,b= train_LR_classifier(X_train,Y_train,0.05)
+		W,b= train_LR_classifier(X_train,Y_train,10)
 		predictions= predict_LR_classifier(X_test,W,b)
 		accuracy= calc_accuracy(predictions,Y_test)
 		hash_map_accuracies[frac_values_per_dataset[i]].append(accuracy)
@@ -60,7 +60,7 @@ def main():
 	
 	for i in hash_map_accuracies.items():		  
 		  learning_curve_plot2[i[0]]=np.mean(i[1])
-	print(learning_curve_plot2)	  
+	
 	plot_graph(learning_curve_plot1,learning_curve_plot2,'GNB vs LR')
 
 def sigmoid(x):
@@ -74,7 +74,7 @@ def plot_graph(plot1,plot2,title):
 	plt.title(title)
 	plt.plot(X,Y1,'r',label='GNB')
 	plt.plot(X,Y2,'b',label='LR')
-	# plt.yticks(np.arange(min(Y1),1, step=0.1))
+	
 	plt.ylabel('Accuracy')
 	plt.xlabel('Training Data Size')
 	plt.legend()		
@@ -89,12 +89,17 @@ def train_LR_classifier(X_train, Y_train, eta):
 
 	W=np.zeros((rows,1))
 	b=0
-	for i in range(0,10):
+
+	for i in range(0,100):
 		Z=np.dot(W.T,X_train)+b
 		Y_hat=sigmoid(Z)
 		loss=Y_train-Y_hat
+
+		# print("XTRAIN",X_train.shape)
+		# print("LOSS",loss.shape)
 		db=np.sum(loss)/cols
-		dW=np.matmul(X_train,loss.T)/cols
+		dW=np.dot(loss,X_train.T)/cols
+		dW=dW.T
 		W=W+eta*dW
 		b=b+eta*db
 
