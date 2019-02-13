@@ -51,7 +51,7 @@ def main():
 		X_test=train_test_data[i][2]
 		Y_test=train_test_data[i][3]				
 		
-		W,b= train_LR_classifier(X_train,Y_train,10)
+		W,b= train_LR_classifier(X_train,Y_train,0.01)
 		predictions= predict_LR_classifier(X_test,W,b)
 		accuracy= calc_accuracy(predictions,Y_test)
 		hash_map_accuracies[frac_values_per_dataset[i]].append(accuracy)
@@ -62,6 +62,42 @@ def main():
 		  learning_curve_plot2[i[0]]=np.mean(i[1])
 	
 	plot_graph(learning_curve_plot1,learning_curve_plot2,'GNB vs LR')
+    
+    # Now generating examples for Gaussian Naive Bayes Classifier!
+	generate_examples(X,Y)
+
+def generate_examples(X,Y):
+	
+	#Now performing 3 fold cross validation
+	X=X[:-(len(Y)%3)]
+	Y=Y[:-(len(Y)%3)]
+	
+	X_temp=np.split(X,3)
+	Y_temp=np.split(Y,3)
+
+	for fold in range(0,3):
+			X_TEST = X_temp[fold]
+			Y_TEST = Y_temp[fold]
+			
+			X_TRAIN = np.concatenate(X_temp[:fold]+X_temp[fold+1:],axis=0)
+			Y_TRAIN = np.concatenate(Y_temp[:fold]+Y_temp[fold+1:],axis=0)
+
+			parameters=train_GNB_classifier(X_TRAIN,Y_TRAIN)
+			pred=predict_GNB_classifier(X_TEST,parameters)
+			accuracy=calc_accuracy(pred,Y_TEST)
+			print('Fold=',fold)
+			# print('Accuracy=',accuracy)
+			generated_examples=np.random.normal(parameters['u_1'],np.sqrt(parameters['var_1']),(400,4))
+			# print(generated_examples)
+			ge_mean=np.mean(generated_examples,axis=0)
+			ge_var=np.var(generated_examples,axis=0)
+			print('Training data mean=',parameters['u_1'])
+			print('Generated data mean=',ge_mean)
+			print('Difference between means=',abs(parameters['u_1']-ge_mean))
+			print('Training data variance=',parameters['var_1'])
+			print('Generated data variance=',ge_var)
+			print('Difference between variance=',abs(parameters['var_1']-ge_var))
+
 
 def sigmoid(x):
 	return 1 / (1 + np.exp(-x))
@@ -117,7 +153,8 @@ def train_GNB_classifier(X_train, Y_train):
 
 	ones= X_train[Y_train[:]==1.00]
 	zeros= X_train[Y_train[:]==0.00]
-	
+	# print(ones.shape)
+	# print(zeros.shape)
 	parameters['u_1']=np.mean(ones,axis=0)
 	parameters['u_0']=np.mean(zeros,axis=0)
 	parameters['var_1']=np.var(ones,axis=0)
@@ -140,6 +177,7 @@ def predict_LR_classifier(X_test,W,b):
 			predictions.append(0)	
 			
 	return predictions
+
 def predict_GNB_classifier(X_test, parameters):
 	
 	predictions=[]
