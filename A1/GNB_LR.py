@@ -1,3 +1,8 @@
+''' 
+# Code Author: Kunal Vinay Kumar Suthar
+# Assignment 1 for CSE:575 Statistical Machine Learning
+# ASU ID: 1215112535
+'''
 import numpy as np
 import random
 from random import shuffle
